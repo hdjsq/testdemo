@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="jquery-1.7.2.min.js"></script>
+    <script src="index.js"></script>
+    <script>
+        function getColor() {
+            var r = Math.floor(Math.random() * 256);
+            var g = Math.floor(Math.random() * 256);
+            var b = Math.floor(Math.random() * 256);
+            return "rgb(" + r + "," + g + "," + b + ")";
+        }
+        /*获取*/
+        var canvas = document.getElementById("canvas")
+        /*获取画图环境*/
+        var context = canvas.getContext("2d")
+        canvas.width = 120;
+        canvas.height = 40;
+        context.strokeRect(0, 0, 120, 40)
+        var aCode = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","1","2", "3", "4", "5", "6", "7", "8", "9", "0"]
+        for (var i = 0; i < 4; i++) {
+            var x = 20 + i * 20;
+            var y = 20 + Math.random() * 10
+            var index = Math.floor(Math.random() * 36)
+            var text = aCode[index];
+            context.font = "bold 20px 微软雅黑"
+            context.fillStyle = getColor()
+            context.translate(x, y);
+            var deg = Math.random() * 60 * Math.PI / 180
+            context.rotate(deg)
+            context.fillText(text, 0, 0)
+            context.rotate(-deg)
+            context.translate(-x, -y);
+        }
+        /*干扰线*/
+        for (var i = 0; i < 8; i++) {
+            context.beginPath();
+            context.moveTo(Math.random() * 120, Math.random() * 40)
+            context.lineTo(Math.random() * 120, Math.random() * 40)
+            context.strokeStyle = getColor()
+            context.stroke()
+        }
+        /*干扰点*/
+        for (var i = 0; i < 20; i++) {
+            context.beginPath();
+            var x = Math.random() * 120
+            var y = Math.random() * 40
+            context.moveTo(x, y)
+            context.lineTo(x + 1, y + 1);
+            context.strokeStyle = getColor()
+            context.stroke()
+        }
+    </script>
+</body>
+
+</html>

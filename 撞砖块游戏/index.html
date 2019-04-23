@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .title {
+            background-color: red;
+            color: #cfc;
+            width: 480px;
+            margin: 0 auto;
+            text-align:center;
+        }
+        canvas{
+            width: 480px;
+            display: block;
+            margin: 0 auto;
+            background-color: #cfc;
+        }
+        .start{
+            background-color: red;
+            color: #cfc;
+            width: 480px;
+            margin: 0 auto;
+            text-align:center;
+        }
+        strong{
+            background-color: red;
+            color: #cfc;
+            width: 480px;
+            margin: 0 auto;
+            display: block;
+            text-align:center;
+            
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title">撞球游戏</div>
+    <canvas id="bricksCanvas" width="480" height="460"></canvas>
+    <div class="start" flage="flage">开始游戏</div>
+    <strong>空格暂停</strong>
+    <script src="../jquery-1.7.2.min.js"></script>
+    <script>
+        var canvas = $("#bricksCanvas")[0];
+        var ctx = canvas.getContext("2d");
+        var stop_status = true;
+        var stop;
+        var canvas_status = true;
+
+        var ballRadius = 10;
+        var ballColor = "#f44280";
+
+        var x = canvas.width / 2;
+        var y = canvas.height - 25;
+
+        //球移动速度
+        var dx = 3;
+        var dy = -3;
+
+        //接盘
+        var paddleHeight = 15;
+        var paddleWidth = 75;
+        var paddleX = (canvas.width - paddleWidth)/2;
+        var rightPressed = false;
+        var leftPressed = false;
+
+        //砖块
+        var brickRowCount = 5;
+        var brickColumnCount = 5;
+        var brickWidth = 82;
+        var brickHeight = 20;
+        var brickPadding = 6;
+        var brickOffsetTop = 35;
+        var brickOffsetLeft = 15;
+
+        var score = 0;
+        var lives = 3;
+
+        //初始化二维数组;存储砖块信息 status：1 表示砖块显示，0表示砖块消失;
+        var bricks = []
+        for (c = 0; c < brickColumnCount; c++) {
+            bricks[c] = [];
+            for (r = 0; r < brickRowCount; r++) {
+                bricks[c][r] = {
+                    x: 0,
+                    y: 0,
+                    status: 1
+                };
+            }
+        }
+
+        //画球
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI * 2); //画圆。底部居中
+            ctx.fillStyle = ballColor;
+            ctx.fill()
+            ctx.closePath();
+        }
+        //画托盘
+        function drawPalle() {
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#00f";
+            ctx.fill();
+            ctx.closePath();
+        }
+        //画砖块
+        function drawBricks() {
+            for (c = 0; c < brickColumnCount; c++) {
+                for (r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status == 1) {
+                        var brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                        var brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        ctx.beginPath();
+                        ctx.rect(brickX, brickY, brickWidth, brickHeight)
+                        ctx.fillStyle = "#8f63cc";
+                        ctx.fill()
+                        ctx.closePath()
+                    }
+                }
+            }
+        }
+        //分数
+        function drawScore() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#f44280";
+            ctx.fillText("Score:" + score, 15, 20);
+        }
+        //生命值
+        function drawLives() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#f44280";
+            ctx.fillText("Lives:" + lives, 390, 20);
+        }
+        //Game Over(
+        function drawGO() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#f44280";
+            ctx.fillText("GAME OVER:", 200, 200);
+        }
+        //砖块消失  小球碰撞砖块的条件
+        function collisionDetection() {
+            for (c = 0; c < brickColumnCount; c++) {
+                for (r = 0; r < brickRowCount; r++) {
+                    var b = bricks[c][r];
+                    if (b.status == 1) {
+                        if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                            dy = -dy;
+                            b.status = 0;
+                            score++;
+                            if (score == brickColumnCount * brickRowCount) {
+                                document.location.reload();
+                                x = canvas.width / 2;
+                                y = canvas.height - 30;
+                                dx = 3;
+                                dy = -3;
+                                paddleX = (canvas.width - paddleWidth) / 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBall();
+            drawPalle();
+            drawBricks();
+            drawScore();
+            drawLives();
+            collisionDetection();
+            if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+                dx = -dx;
+            }
+            if (y + dy < ballRadius) {
+                dy = -dy;
+            }
+            if (y + dy > canvas.height - (ballRadius + paddleHeight)) {
+                if (x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                } else {
+                    lives--;
+                    if (lives == 0) {
+                        drawGO()
+                        $(".start").attr("flage", "flage");
+                        lives = 4;
+                        score = 0;
+                        stop_status = false;
+                        return
+                    } else {
+                        x = canvas.width / 2;
+                        y = canvas.height - 30;
+                        dx = 3;
+                        dy = -3;
+                        paddleX = (canvas.width - paddleWidth) / 2
+                    }
+                }
+            }
+            if (rightPressed && paddleX < canvas.width - paddleWidth) {
+                paddleX += 5;
+            } else if (leftPressed && paddleX > 0) {
+                paddleX -= 5;
+            }
+            x += dx;
+            y += dy;
+            stop = requestAnimationFrame(draw);
+        }
+
+        function mouseMoveHandler(e) {
+            var relativeX = e.clientX - canvas.offsetLeft;
+            if (relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleHeight / 2;
+            }
+        }
+
+        function keyDownHandler(e) {
+            if (e.keyCode == 39) {
+                rightPressed = true;
+            } else if (e.keyCode == 37) {
+                leftPressed = true;
+            } else if (e.keyCode == 32) {
+                if (stop_status) {
+                    window.cancelAnimationFrame(stop)
+                    canvas_status = false;
+                } else {
+                    stop = requestAnimationFrame(draw);
+                    canvas_status = true;
+                }
+            }
+        }
+
+        function keyUpHandler(e) {
+            if (e.keyCode == 39) {
+                rightPressed = false;
+            } else if (e.keyCode == 37) {
+                leftPressed = false;
+            }
+        }
+        $(function () {
+            drawBall();
+            drawPalle();
+            drawBricks();
+            drawScore();
+            drawLives();
+            $(".start").click(function () {
+                stop_status = true;
+                if ($(".start").attr("flage") == "flage") {
+                    for (c = 0; c < brickColumnCount; c++) {
+                        for (r = 0; r < brickRowCount; r++) {
+                            bricks[c][r].status = 1;
+                        }
+                    }
+                    $(".start").attr("flage", "")
+                    draw();
+                    document.addEventListener("mousemove", mouseMoveHandler, false)
+                    document.addEventListener("keydown", keyDownHandler, false)
+                    document.addEventListener("keyup", keyUpHandler, false)
+                }
+            })
+        })
+    </script>
+</body>
+
+</html>
